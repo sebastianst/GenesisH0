@@ -1,0 +1,7 @@
+# vim ctags
+/tags
+# pip stuff
+/bin
+/include
+/lib
+/pip-selfcheck.json
