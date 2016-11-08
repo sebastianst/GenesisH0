@@ -17,7 +17,8 @@ def main():
   print_block_info(options, hash_merkle_root)
 
   block_header        = create_block_header(hash_merkle_root, options.time, options.bits, options.nonce)
-  genesis_hash, nonce = generate_hash(block_header, algorithm, options.nonce, options.bits)
+  genesis_hash, nonce = generate_hash(block_header, algorithm, options.nonce,
+          options.bits, options.solver)
   announce_found_genesis(genesis_hash, nonce)
 
 
@@ -69,7 +70,7 @@ def create_output_script(pubkey):
   return (script_len + pubkey + OP_CHECKSIG).decode('hex')
 
 
-def create_transaction(input_script, output_script,options):
+def create_transaction(input_script, output_script, options):
   transaction = Struct("transaction",
     Bytes("version", 4),
     Byte("num_inputs"),
@@ -199,5 +200,5 @@ def announce_found_genesis(genesis_hash, nonce):
   print "genesis hash: " + genesis_hash.encode('hex_codec')
 
 
-# GOGOGO!
-main()
+if __name__ == "__main__":
+    main()
