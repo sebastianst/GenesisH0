@@ -3,6 +3,7 @@ import scrypt
 
 from construct import *
 
+from subprocess import check_output
 
 def main():
   options = get_args()
@@ -172,8 +173,24 @@ def generate_hashes_from_block(data_block, algorithm, solver):
     except ImportError:
       sys.exit("Cannot run X15 algorithm: module x15_hash not found")
     header_hash = x15_hash.getPoWHash(data_block)[::-1]
+  elif algorithm == 'equihash':
+    header_hash = run_equihash_solver(data_block, solver)
   return sha256_hash, header_hash
 
+def run_equihash_solver(data_block, solver):
+  output = check_output(solver.split() + [data_block.encode('hex_codec')])
+  solc = 0 # solution count
+  sols = []
+  for line in output.split('\n'):
+    if solc > 0:
+      sols.append(line)
+      solc -= 1
+      print 'Solution: ', line
+    if line.startswith('Nonce'):
+      _, nonce, solc, _ = line.split()
+      print 'Nonce: ', nonce, ' # ', solc
+
+  return sols[0].decode('hex')
 
 def is_genesis_hash(header_hash, target):
   return int(header_hash.encode('hex_codec'), 16) < target
