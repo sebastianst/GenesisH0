@@ -38,6 +38,8 @@ def get_args():
                    type="int", help="the value in coins for the output, full value (exp. in bitcoin 5000000000 - To get other coins value: Block Value * 100000000)")
   parser.add_option("-b", "--bits", dest="bits",
                    type="int", help="the target in compact representation, associated to a difficulty of 1")
+  parser.add_option("-s", "--solver", dest="solver", default="sa-solver -i",
+                   type="string", help="Equihash solver command; must accepts the block header as argument in hex.")
 
   (options, args) = parser.parse_args()
   if not options.bits:
@@ -126,7 +128,7 @@ def create_block_header(hash_merkle_root, time, bits, nonce):
 
 
 # https://en.bitcoin.it/wiki/Block_hashing_algorithm
-def generate_hash(data_block, algorithm, start_nonce, bits):
+def generate_hash(data_block, algorithm, start_nonce, bits, solver):
   print 'Searching for genesis hash..'
   nonce           = start_nonce
   last_updated    = time.time()
@@ -134,7 +136,7 @@ def generate_hash(data_block, algorithm, start_nonce, bits):
   target = (bits & 0xffffff) * 2**(8*((bits >> 24) - 3))
 
   while True:
-    sha256_hash, header_hash = generate_hashes_from_block(data_block, algorithm)
+    sha256_hash, header_hash = generate_hashes_from_block(data_block, algorithm, solver)
     last_updated             = calculate_hashrate(nonce, last_updated)
     if is_genesis_hash(header_hash, target):
       if algorithm == "X11" or algorithm == "X13" or algorithm == "X15":
@@ -145,7 +147,7 @@ def generate_hash(data_block, algorithm, start_nonce, bits):
      data_block = data_block[0:len(data_block) - 4] + struct.pack('<I', nonce)  
 
 
-def generate_hashes_from_block(data_block, algorithm):
+def generate_hashes_from_block(data_block, algorithm, solver):
   sha256_hash = hashlib.sha256(hashlib.sha256(data_block).digest()).digest()[::-1]
   header_hash = ""
   if algorithm == 'scrypt':
